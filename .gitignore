@@ -1,0 +1,5 @@
+__pycache__/
+*.code-workspace
+albumarts/
+!albumarts/.keep
+lastfm.py
