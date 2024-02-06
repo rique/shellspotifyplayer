@@ -11,7 +11,8 @@ from hashlib import md5
 from os.path import exists as file_exists
 
 from colors import *
-from config import LastFmConfig, SystemConfig, LayoutConfig, MarqueeConfig, GraphLevelsConfig
+from config import SystemConfig, LayoutConfig, MarqueeConfig, GraphLevelsConfig
+from lastfm import LastFmConfig
 import requests
 
 
