@@ -81,7 +81,7 @@ def get_starting_previous_volume(volume):
     return 0 if volume > 0 else 1
 
 
-def is_data():
+def key_pressed():
     return select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
 
 

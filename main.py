@@ -41,7 +41,7 @@ def main():
     reversed_timer = True
     
     is_shuffle = spotify_bus.Shuffle
-    shuffle_icon = '🔀' if is_shuffle else ''
+    shuffle_icon = chr(0x1F500) if is_shuffle else ''
 
     previous_volue = get_starting_previous_volume(spotify_bus.Volume)
     fifo_file =  open(SystemConfig.FIFO_PATH)
@@ -111,7 +111,7 @@ def main():
                         playing = False
                         continue
 
-                    if cur_track_id != track_id:
+                    if cur_track_id != track_id or percent_pos == 0:
                         playing = False
                         continue
 
@@ -119,9 +119,9 @@ def main():
                         volume_bar = get_volume_bar(spotify_bus.Volume)
                         current_volume = spotify_bus.Volume
 
-                    if is_data():
-                        playing, reversed_timer, change_volume, previous_volue, error_msg, paused, muted, is_shuffle = execute_action(sys.stdin.read(1), spotify_bus, reversed_timer, previous_volue, trk_pos, paused, muted, is_shuffle, track_id)
-                        if change_volume:
+                    if key_pressed():
+                        playing, reversed_timer, volume_changed, previous_volue, error_msg, paused, muted, is_shuffle = execute_action(sys.stdin.read(1), spotify_bus, reversed_timer, previous_volue, trk_pos, paused, muted, is_shuffle, track_id)
+                        if volume_changed:
                             volume_bar = get_volume_bar(spotify_bus.Volume)
                         if not playing:
                             continue
@@ -139,7 +139,7 @@ def main():
                         elif not paused:
                             if not fifo_file:
                                 fifo_file = open(SystemConfig.FIFO_PATH)
-                        shuffle_icon = '🔀' if is_shuffle else ''
+                        shuffle_icon = chr(0x1F500) if is_shuffle else ''
 
                     progr = percent_pos / 1000
 
