@@ -509,12 +509,10 @@ def get_color_from_list(vol):
     
     val = int(float(vol) / ratio)
     if val >= list_color_len:
-        val = val - 1
+        val = list_color_len - 1
     try:
-        # print(val, list_color_len, ratio, vol)
         return f'\033[38;5;{list_color[val]}m{bold}'
     except IndexError as e:
-        # print_exception(e)
         print(val, list_color_len, ratio, vol)
         raise e
     

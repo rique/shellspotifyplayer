@@ -21,7 +21,7 @@ class SystemConfig:
     SLEEP = .008
     # FIFO_PATH = '/home/enriaue/.local/lib/show_date/pipewire/vol'
     FIFO_PATH = '/tmp/vol'
-    MAX_VOLUME = 100
+    MAX_VOLUME = 128
     BASE_PATH = '/home/enriaue/.local/lib/show_date/spotify_player/'
     ALBUM_ART_PATH = '/home/enriaue/.local/lib/show_date/spotify_player/albumarts/'
     GENERIC_ALBUM_ART_PATH = '/home/enriaue/.local/lib/show_date/spotify_player/albumarts/generic.sxl'
