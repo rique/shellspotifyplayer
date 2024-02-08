@@ -62,7 +62,7 @@ def main():
             nb_min, secs = get_min_sec(nb_secs)
             track_time = f"{nb_min:02}:{secs:02}"
 
-            the_string = f"{artist} ~ {track_title} ~ ({album}) [{track_time}]"
+            the_string = f"{artist} ～ {track_title} ～ ({album}) [{track_time}]"
             the_string_len = len(the_string)
             volume_bar = get_volume_bar(spotify_bus.Volume)
             

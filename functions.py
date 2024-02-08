@@ -180,7 +180,7 @@ def display_now_playing(playing_msg, playing_msg_len, show_now_playing, i=0, x=0
     if i >= 0 and i <= 138:
         print(f'{C_LIME}\033[5m{playing_msg}{NC}', flush=True)
     else:
-        if x  >= playing_msg_len:
+        if x >= playing_msg_len:
             x = playing_msg_len
         ply = playing_msg[x:playing_msg_len]
         if i >= 200:
@@ -219,7 +219,7 @@ def render_volume_bar(volume_bar, volume, shuffle_icon):
 
 def break_lines(nb_lines = 1):
     for i in list(range(0, nb_lines)):
-        print(flush=True) 
+        print() 
 
 
 def display_date():
@@ -430,10 +430,12 @@ def display_vu_meters(fifo_file):
         print(f"[{g.zfill(3)}]  {g_color}{c * int(g)}{NC}{no_vol * (max_volume - int(g))}")
         print(f"[{hmid1.zfill(3)}]  {k_color}{c * int(hmid1)}{NC}{no_vol * (max_volume - int(hmid1))}")
         print(f"[{h.zfill(3)}]  {h_color}{c * int(h)}{NC}{no_vol * (max_volume - int(h))}")
-        print(f"[{h.zfill(3)}]  {j_color}{c * int(h)}{NC}{no_vol * (max_volume - int(h))}")
+        print(f"[{j.zfill(3)}]  {j_color}{c * int(j)}{NC}{no_vol * (max_volume - int(j))}")
         
-    except ValueError:
-        display_empty_vu_metters(msg="EXCEPT")    
+    except ValueError as e:
+        display_empty_vu_metters(msg=f"EXCEPT {e}")
+    except Exception as e:
+        display_empty_vu_metters(msg=f"SYSTEM FAILURE")
 
 
 def display_empty_vu_metters(msg="NO DATA"):
@@ -533,7 +535,7 @@ def get_album_art(album_art_url, track_id: str):
     
     if not fle_sxl:
         fle_path = download_album_art(album_art_url, album_art_id)
-        fle_path = resize_image(fle_path, album_art_id)
+        # fle_path = resize_image(fle_path, album_art_id)
         fle_sxl = convert_image_to_sixel(fle_path, album_art_id)
     return fle_sxl
 
@@ -547,7 +549,8 @@ def resize_image(fle_path, album_art_id):
 
 def convert_image_to_sixel(fle_path, album_art_id):
     sxl_path = f"{SystemConfig.ALBUM_ART_PATH}/{album_art_id}.sxl"
-    subprocess.run(f"img2sixel {fle_path} > {sxl_path}", shell=True)
+    subprocess.run(f"img2sixel -w 60 -q low {fle_path} > {sxl_path}", shell=True)
+    # subprocess.run(f'rm -f {fle_path}', shell=True)
     return sxl_path
 
 
