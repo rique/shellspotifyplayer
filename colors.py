@@ -14,12 +14,5 @@ BOLD  = '\033[1m'
 ITALIC = '\033[3m'
 UNDERLINE = '\033[4m'
 STRIKETHROUGH = '\033[9m'
-
-"""echo -e "\e[1mbold\e[0m"
-echo -e "\e[3mitalic\e[0m"
-echo -e "\e[3m\e[1mbold italic\e[0m"
-echo -e "\e[4munderline\e[0m"
-echo -e "\e[9mstrikethrough\e[0m"
-echo -e "\e[31mHello World\e[0m"
-echo -e "\x1B[31mHello World\e[0m"
-"""
+SONG_COLOR = "\033[38;5;48m"
+TITLE_GREY = "\033[38;5;248m"

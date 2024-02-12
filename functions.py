@@ -14,6 +14,22 @@ from colors import *
 from config import SystemConfig, LayoutConfig, MarqueeConfig, GraphLevelsConfig
 from lastfm import LastFmConfig
 import requests
+import curses
+
+
+def start_curses(h, w):
+    stdscr = curses.initscr()
+    curses.noecho()
+    curses.cbreak()
+    stdscr.keypad(True)
+    stdscr.resize(h, w)
+    return stdscr
+
+
+def end_curses(stdscr):
+    curses.nocbreak()
+    stdscr.keypad(False)
+    curses.echo()
 
 
 def get_min_sec(total_secs):
@@ -158,7 +174,7 @@ def display_error_msg(error_msg, e=0, e_c=0):
 
     error_msg_len = len(error_msg)
 
-    if e < 64:
+    if e < 140:
         error_msg_len = len(error_msg)
         print_error_msg(error_msg)
         e = e + 1
@@ -177,7 +193,7 @@ def display_error_msg(error_msg, e=0, e_c=0):
 
 def display_now_playing(playing_msg, playing_msg_len, show_now_playing, i=0, x=0):
 
-    if i >= 0 and i <= 138:
+    if i >= 0 and i <= 160:
         print(f'{C_LIME}\033[5m{playing_msg}{NC}', flush=True)
     else:
         if x >= playing_msg_len:
@@ -187,7 +203,7 @@ def display_now_playing(playing_msg, playing_msg_len, show_now_playing, i=0, x=0
             x = x + 1
         print(f'{C_LIME}{ply}{NC}', flush=True)
 
-    if i == 280:
+    if i == 300:
         show_now_playing = False
         i = 0
     else:
@@ -205,10 +221,10 @@ def display_tracks_info(the_string, the_string_len, y, x=0, marquee=False):
         else:
             y = y + 2
     if marquee:
-        x = do_marq(the_string, C_GREY74, x)
+        x = do_marq(the_string, TITLE_GREY, x)
         return x, y
 
-    print(f"{C_GREY74}{the_string[0:y]}{NC}", flush=True)
+    print(f"Song: {TITLE_GREY}{the_string[0:y]}{NC}", flush=True)
 
     return y
 
@@ -253,16 +269,22 @@ def pre_generate_marq(the_string, color):
     a_len = len(the_string)
     marq_array = []
     speed = MarqueeConfig.SPEED
-    for x in list(range(0, int(a_len / speed))):
+    limit_range = int(a_len / speed)
+    for x in list(range(0, limit_range)):
+        if True: # x >= (limit_range - 1):
+            col = color
+        else:
+            col = get_color_from_list(x, max_volume=(limit_range - 1))
+        
         x = int(floor(x * speed))
-        marq_array.append(f'{color}{the_string[int(floor(x)):a_len]}{the_string[0:int(floor(x))]}{NC}')
+        marq_array.append(f'{col}{the_string[int(floor(x)):a_len]}{the_string[0:int(floor(x))]}{NC}')
 
     return marq_array, len(marq_array)
 
 
 
 def do_marq_array(marq_array: list, x=0):
-    print(marq_array[x])
+    print(f'Song: {marq_array[x]}')
 
     return x + 1
 
@@ -271,7 +293,7 @@ def get_marq_string_padding(the_string):
     if len(the_string) >= LayoutConfig.COLUMN_COUNT:
         padding = 1
     else:
-        padding = abs(LayoutConfig.COLUMN_COUNT - len(the_string))
+        padding = abs((LayoutConfig.COLUMN_COUNT) - len(the_string))
     return the_string + (' ' * padding)
 
 
@@ -296,7 +318,7 @@ def marq_one(the_string, a_len, x, color):
     """
     if x == len(the_string):
         x = 0
-    print(f'{color}{the_string[int(floor(x)):a_len]}{the_string[0:int(floor(x))]}{NC}', flush=True)
+    print(f'Song: {the_string[int(floor(x)):a_len]}{the_string[0:int(floor(x))]}', flush=True)
     x = x + .5
 
     return x
@@ -404,6 +426,7 @@ def display_vu_meters(fifo_file):
         return
     c = GraphLevelsConfig.GRAPH_SMALL_GLYPH
     mid1, r, mid2, b, lmid, bass2, bass3, g, h, mid3, j, hmid1 = line
+    #, k , l, m1
     no_vol = GraphLevelsConfig.GRAPH_EMPTY
     max_volume = SystemConfig.MAX_VOLUME
     try:
@@ -419,7 +442,10 @@ def display_vu_meters(fifo_file):
         i_color = get_color_from_list(mid3)
         j_color = get_color_from_list(j)
         k_color = get_color_from_list(hmid1)
-        print(f"[{bass3.zfill(3)}]  {f_color}{c * int(bass3)}{NC}{no_vol * (max_volume - int(bass3))}")
+        # k1_color = get_color_from_list(k)
+        """l1_color = get_color_from_list(l)
+        m_color = get_color_from_list(m1)"""
+        """print(f"[{bass3.zfill(3)}]  {f_color}{c * int(bass3)}{NC}{no_vol * (max_volume - int(bass3))}")
         print(f"[{bass2.zfill(3)}]  {bass2_color}{c * int(bass2)}{NC}{no_vol * (max_volume - int(bass2))}")
         print(f"[{r.zfill(3)}]  {r_color}{c * int(r)}{NC}{no_vol * (max_volume - int(r))}")
         print(f"[{lmid.zfill(3)}]  {bass1_color}{c * int(lmid)}{NC}{no_vol * (max_volume - int(lmid))}")
@@ -430,12 +456,31 @@ def display_vu_meters(fifo_file):
         print(f"[{g.zfill(3)}]  {g_color}{c * int(g)}{NC}{no_vol * (max_volume - int(g))}")
         print(f"[{hmid1.zfill(3)}]  {k_color}{c * int(hmid1)}{NC}{no_vol * (max_volume - int(hmid1))}")
         print(f"[{h.zfill(3)}]  {h_color}{c * int(h)}{NC}{no_vol * (max_volume - int(h))}")
-        print(f"[{j.zfill(3)}]  {j_color}{c * int(j)}{NC}{no_vol * (max_volume - int(j))}")
+        print(f"[{j.zfill(3)}]  {j_color}{c * int(j)}{NC}{no_vol * (max_volume - int(j))}")"""
+        # █
+        print(f"[{f_color}█{NC}]  {f_color}{c * int(bass3)}{NC}{no_vol * (max_volume - int(bass3))}")
+        print(f"[{bass2_color}█{NC}]  {bass2_color}{c * int(bass2)}{NC}{no_vol * (max_volume - int(bass2))}")
+        print(f"[{g_color}█{NC}]  {g_color}{c * int(g)}{NC}{no_vol * (max_volume - int(g))}")
+        print(f"[{bass1_color}█{NC}]  {bass1_color}{c * int(lmid)}{NC}{no_vol * (max_volume - int(lmid))}")
         
+        print(f"[{h_color}█{NC}]  {h_color}{c * int(h)}{NC}{no_vol * (max_volume - int(h))}")
+        print(f"[{b_color}█{NC}]  {b_color}{c * int(b)}{NC}{no_vol * (max_volume - int(b))}")
+        print(f"[{a_color}█{NC}]  {a_color}{c * int(mid2)}{NC}{no_vol * (max_volume - int(mid2))}")
+        print(f"[{i_color}█{NC}]  {i_color}{c * int(mid3)}{NC}{no_vol * (max_volume - int(mid3))}")
+        
+        print(f"[{l_color}█{NC}]  {l_color}{c * int(mid1)}{NC}{no_vol * (max_volume - int(mid1))}")
+        print(f"[{k_color}█{NC}]  {k_color}{c * int(hmid1)}{NC}{no_vol * (max_volume - int(hmid1))}")
+        print(f"[{r_color}█{NC}]  {r_color}{c * int(r)}{NC}{no_vol * (max_volume - int(r))}")
+        print(f"[{j_color}█{NC}]  {j_color}{c * int(j)}{NC}{no_vol * (max_volume - int(j))}")
+        
+        # print(f"[{k1_color}█{NC}]  {k1_color}{c * int(k)}{NC}{no_vol * (max_volume - int(k))}")
+        
+        """print(f"[{l1_color}█{NC}]  {l1_color}{c * int(l)}{NC}{no_vol * (max_volume - int(l))}")
+        print(f"[{m_color}█{NC}]  {m_color}{c * int(m1)}{NC}{no_vol * (max_volume - int(m1))}")"""
     except ValueError as e:
         display_empty_vu_metters(msg=f"EXCEPT {e}")
     except Exception as e:
-        display_empty_vu_metters(msg=f"SYSTEM FAILURE")
+        display_empty_vu_metters(msg=f"SYSTEM FAILURE {e}")
 
 
 def display_empty_vu_metters(msg="NO DATA"):
@@ -502,14 +547,25 @@ def get_symetric_color(val):
     return f"\033[38;5;{val + 17}m{BOLD}"
 
 
-def get_color_from_list(vol):
+def get_color_from_list(vol, max_volume=SystemConfig.MAX_VOLUME):
+
+    vol = int(vol)
+    
+    if vol == 0:
+        return '\033[38;5;185m'
+    
     list_color = GraphLevelsConfig.LIST_COLORS_VOLUME
-    max_volume = SystemConfig.MAX_VOLUME
     list_color_len = len(list_color)
     bold = GraphLevelsConfig.GRAPH_BOLD
+
+    if vol == 1:
+        return f'\033[38;5;{list_color[0]}m{bold}'
+    if vol >= max_volume:
+        return f'\033[38;5;{list_color[list_color_len - 1]}m{bold}'
+    
     ratio =  max_volume / list_color_len
     
-    val = int(float(vol) / ratio)
+    val = int(vol / ratio)
     if val >= list_color_len:
         val = list_color_len - 1
     try:
@@ -565,10 +621,33 @@ def get_image_sixel(album_art_id):
     return f'{SystemConfig.ALBUM_ART_PATH}{album_art_id}.sxl'
 
 
-def render_album_art(sxl_path=None):
+def render_album_art(t, sxl_path=None):
+    # stdscr = start_curses(3, 3)
+    """curses.start_color()
+    curses.use_default_colors()
+    stdscr.clear()
+    stdscr.refresh()
+    """# t = 279000
     if not sxl_path:
         sxl_path = SystemConfig.GENERIC_ALBUM_ART_PATH
-    subprocess.run(f"cat {sxl_path}", shell=True)
+    i = 0
+    
+    res = subprocess.run(f"cat {sxl_path}", stdout=subprocess.PIPE, shell=True)
+    print(res.stdout.decode())
+    # stdscr.refresh()
+    # curses.napms(int(t))
+    # end_curses(stdscr)
+    
 
+def get_album_art_data(sxl_path):
+    if not sxl_path:
+        sxl_path = SystemConfig.GENERIC_ALBUM_ART_PATH
+    
+    res = subprocess.run(f"cat {sxl_path}", stdout=subprocess.PIPE, shell=True)
 
+    return res.stdout.decode()
+
+def test_album_art():
+    fle = f'{SystemConfig.ALBUM_ART_PATH}ab67616d0000b27345cab2f7f48ad399f7138447-2.nc'
+    subprocess.run(f'cat {fle}', shell=True)
 

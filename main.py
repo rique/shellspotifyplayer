@@ -13,15 +13,18 @@ from config import MarqueeConfig, AliveBarConfig, SystemConfig
 from alive_progress import alive_bar
 from time import sleep
 from pydbus import SessionBus
-
-
+from curses import wrapper
+"""from notcurses import notcurses
+nc = notcurses.lib.notcurses_init
+print(help(nc), nc)
+exit(0)"""
 def main():
     try:
         os.mkfifo(SystemConfig.FIFO_PATH)
     except FileExistsError:
         pass
 
-    subprocess.run("cava &", shell=True)
+    subprocess.call("cava &>/dev/null &", shell=True)
 
     old_settings = termios.tcgetattr(sys.stdin)
     session_bus = SessionBus()
@@ -57,16 +60,20 @@ def main():
             track_id = metadata['mpris:trackid']
 
             album_art_sxl_path = get_album_art(metadata['mpris:artUrl'], track_id)
-
+            album_art_data = get_album_art_data(album_art_sxl_path)
+            
+            
             nb_secs = (track_length / 1000000)
             nb_min, secs = get_min_sec(nb_secs)
             track_time = f"{nb_min:02}:{secs:02}"
 
-            the_string = f"{artist} ～ {track_title} ～ ({album}) [{track_time}]"
-            the_string_len = len(the_string)
+            # the_string = f"{artist} ～ {track_title} ～ ({album}) [{track_time}]"
+            track_song_info = f"{track_title} ~ ({album}) [{track_time}]"
+            track_info_len = len(track_song_info)
+            artist_info = f"Artist: {TITLE_GREY}{artist}{NC}"
             volume_bar = get_volume_bar(spotify_bus.Volume)
             
-            marq_array, marq_len = pre_generate_marq(the_string, color=C_GREY74)
+            marq_array, marq_len = pre_generate_marq(track_song_info, color=TITLE_GREY)
 
             i = 0 # "Playing Next" display sync
             x = 0 # "Playing Next" animation Sync
@@ -76,14 +83,14 @@ def main():
             marq_x = MarqueeConfig.MARQ_X # Marquee effect key
             marq_c = MarqueeConfig.MARQ_C # Marquee effect actif
             marq_l = MarqueeConfig.MARQ_L
-            marq_up = get_marq_up(the_string_len)
+            marq_up = get_marq_up(track_info_len)
 
             current_volume = spotify_bus.Volume
 
             display_date()
 
             break_lines(3)
-
+            # weather = open('/home/enriaue/.stuff/tempe_sp').readline()
             playing = True
             show_now_playing = True
             paused = spotify_bus.PlaybackStatus == 'Paused'
@@ -111,7 +118,7 @@ def main():
                         playing = False
                         continue
 
-                    if cur_track_id != track_id or percent_pos == 0:
+                    if percent_pos == 0:
                         playing = False
                         continue
 
@@ -177,11 +184,16 @@ def main():
                         
                         marq_x = do_marq_array(marq_array, marq_x)
                     else:
-                        y = display_tracks_info(the_string, the_string_len, y)
-
+                        y = display_tracks_info(track_song_info, track_info_len, y)
+                    print(artist_info)
                     # break_lines(2)
-                    # render_album_art(album_art_sxl_path)
-                    
+                    #if render_album:
+                    # render_album_art(t=(trk_pos / 1000), sxl_path=album_art_sxl_path)
+                    # render_album = False
+                    # test_album_art()
+                    """print()
+                    print(f"The weather:  {weather}")"""
+                    # print(f"{album_art_data}{NC}")
                     break_lines(2)
                     display_vu_meters(fifo_file)
                     break_lines(2)
@@ -192,7 +204,7 @@ def main():
                     break_lines()
                     marq_c = marq_c + 1
                     
-        except (KeyboardInterrupt):
+        except KeyboardInterrupt:
             print("Good Bye")
             if fifo_file:
                 fifo_file.close()
