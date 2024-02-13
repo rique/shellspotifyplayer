@@ -82,8 +82,8 @@ def get_volume_color_and_label(volume, max_volume):
 
 
 def get_volume_bar(volume):
-    volume = int(volume * 100)
-    max_volume = 100
+    max_volume = SystemConfig.MAX_VOLUME
+    volume = int(volume * max_volume)
     nb_spaces = max_volume - volume
     has_volume_glyph = '―' # █  ■ ⬛  ― █
     has_no_volume = ' '  # ⬜
@@ -480,10 +480,10 @@ def display_vu_meters(fifo_file):
     except ValueError as e:
         display_empty_vu_metters(msg=f"EXCEPT {e}")
     except Exception as e:
-        display_empty_vu_metters(msg=f"SYSTEM FAILURE {e}")
+        display_empty_vu_metters(msg=f"SYSTEM FAILURE {e}", fatal=True)
 
 
-def display_empty_vu_metters(msg="NO DATA"):
+def display_empty_vu_metters(msg="NO DATA", fatal=False):
     msg_len = len(msg)
     is_even = msg_len % 2 == 0
     padding_l = 16 - msg_len
@@ -496,18 +496,21 @@ def display_empty_vu_metters(msg="NO DATA"):
     AMARILLO = f"\033[38;5;190m{BOLD}"
     AZUL = f"\033[38;5;27m{BOLD}"
     ROJO = f"\033[38;5;196m{BOLD}"
-    print(f"[000]  {AMARILLO}{char * 100}{NC}")
-    print(f"[000]  {AMARILLO}{char * 100}{NC}")
-    print(f"[000]  {AMARILLO}{char * 100}{NC}")
-    print(f"[000]  {AMARILLO}{char * 40} {NC}__________________{AMARILLO} {char * 40}{NC}")
-    print(f"[000]  {AZUL}{char * 40} {NC}|                |{AZUL} {char * 40}{NC}")
-    print(f"[000]  {AZUL}{char * 40} {NC}|{spacing * padding_l}{msg}{spacing * padding_r}|{AZUL} {char * 40}{NC}")
-    print(f"[000]  {AZUL}{char * 40} {NC}|                |{AZUL} {char * 40}{NC}")
-    print(f"[000]  {AZUL}{char * 40} {NC}‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾{AZUL} {char * 40}{NC}")
-    print(f"[000]  {ROJO}{char * 100}{NC}")
-    print(f"[000]  {ROJO}{char * 100}{NC}")
-    print(f"[000]  {ROJO}{char * 100}{NC}")
-    print(f"[000]  {ROJO}{char * 100}{NC}")
+    print(f"[000]  {AMARILLO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {AMARILLO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {AMARILLO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {AMARILLO}{char * 48} {NC}__________________{AMARILLO} {char * 47}{NC}")
+    print(f"[000]  {AZUL}{char * 48} {NC}|                |{AZUL} {char * 47}{NC}")
+    print(f"[000]  {AZUL}{char * 48} {NC}|{spacing * padding_l}{msg}{spacing * padding_r}|{AZUL} {char * 40}{NC}")
+    print(f"[000]  {AZUL}{char * 48} {NC}|                |{AZUL} {char * 47}{NC}")
+    print(f"[000]  {AZUL}{char * 48} {NC}‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾{AZUL} {char * 47}{NC}")
+    print(f"[000]  {ROJO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {ROJO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {ROJO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {ROJO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    
+    if fatal:
+        exit(0)
 
 
 def display_empty_vu_metters_ve(msg=''):
@@ -515,18 +518,18 @@ def display_empty_vu_metters_ve(msg=''):
     AMARILLO = f"\033[38;5;190m{BOLD}"
     AZUL = f"\033[38;5;27m{BOLD}"
     ROJO = f"\033[38;5;196m{BOLD}"
-    print(f"[000]  {AMARILLO}{char * 100}{NC}")
-    print(f"[000]  {AMARILLO}{char * 100}{NC}")
-    print(f"[000]  {AMARILLO}{char * 100}{NC}")
-    print(f"[000]  {AMARILLO}{char * 100}{NC}")
-    print(f"[000]  {AZUL}{char * 100}{NC}")
-    print(f"[000]  {AZUL}{char * 100}{NC}")
-    print(f"[000]  {AZUL}{char * 100}{NC}")
-    print(f"[000]  {AZUL}{char * 100}{NC}")
-    print(f"[000]  {ROJO}{char * 100}{NC}")
-    print(f"[000]  {ROJO}{char * 100}{NC}")
-    print(f"[000]  {ROJO}{char * 100}{NC}")
-    print(f"[000]  {ROJO}{char * 100}{NC}")
+    print(f"[000]  {AMARILLO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {AMARILLO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {AMARILLO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {AMARILLO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {AZUL}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {AZUL}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {AZUL}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {AZUL}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {ROJO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {ROJO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {ROJO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
+    print(f"[000]  {ROJO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
 
 
 
@@ -540,7 +543,7 @@ def get_vu_meter_color(val):
     return f"\033[38;5;{val}m"
 
 def get_symetric_color(val):
-    ratio = int((231 - 17) / 100)
+    ratio = int((231 - 17) / SystemConfig.MAX_VOLUME)
     val = int(val) *  ratio
     if val == 16:
         val = 17

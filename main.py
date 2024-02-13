@@ -2,55 +2,43 @@
 
 import os
 import sys
-import tty
 import termios
 import subprocess
 from traceback import print_exception
 
-from functions import *
+from functions import (
+                    display_date,
+                    get_album_art,
+                    get_album_art_data,
+                    get_min_sec,
+                    get_volume_bar,
+                    pre_generate_marq,
+                    get_marq_up,
+                    break_lines,
+                    key_pressed,
+                    execute_action,
+                    get_progress_time,
+                    display_now_playing,
+                    display_error_msg,
+                    do_marq_array,
+                    display_tracks_info,
+                    display_vu_meters,
+                    render_volume_bar
+            )
 from config import MarqueeConfig, AliveBarConfig, SystemConfig
 
 from alive_progress import alive_bar
 from time import sleep
-from pydbus import SessionBus
-from curses import wrapper
-"""from notcurses import notcurses
-nc = notcurses.lib.notcurses_init
-print(help(nc), nc)
-exit(0)"""
+from app_functions import setup_app
+
+from colors import TITLE_GREY, NC, SHUFFLE_OFF, SHUFFLE_ON
+
+
 def main():
-    try:
-        os.mkfifo(SystemConfig.FIFO_PATH)
-    except FileExistsError:
-        pass
-
-    subprocess.call("cava &>/dev/null &", shell=True)
-
-    old_settings = termios.tcgetattr(sys.stdin)
-    session_bus = SessionBus()
-
-    spotify_bus = session_bus.get(
-        "org.mpris.MediaPlayer2.spotify", # Bus name
-        "/org/mpris/MediaPlayer2" # Object path
-    )
-
-    spotify_bus.Play()
-
-    playing_msg = 'NOW PLAYING'
-    playing_msg_len = len(playing_msg)
-
-    tty.setcbreak(sys.stdin.fileno())
-
-    reversed_timer = True
-    
-    is_shuffle = spotify_bus.Shuffle
-    shuffle_icon = chr(0x1F500) if is_shuffle else ''
-
-    previous_volue = get_starting_previous_volume(spotify_bus.Volume)
-    fifo_file =  open(SystemConfig.FIFO_PATH)
+    spotify_bus, playing_msg, playing_msg_len, reversed_timer, is_shuffle, shuffle_icon, previous_volue, fifo_file, old_settings = setup_app()
     while True:
         try:
-            os.system('clear')
+            subprocess.run('clear', shell=True)
             metadata = spotify_bus.Metadata
             track_length = metadata['mpris:length']
 
@@ -146,7 +134,7 @@ def main():
                         elif not paused:
                             if not fifo_file:
                                 fifo_file = open(SystemConfig.FIFO_PATH)
-                        shuffle_icon = chr(0x1F500) if is_shuffle else ''
+                        shuffle_icon = f' {SHUFFLE_ON}{NC}' if is_shuffle else f' {SHUFFLE_OFF}{NC}'
 
                     progr = percent_pos / 1000
 
@@ -198,7 +186,7 @@ def main():
                     display_vu_meters(fifo_file)
                     break_lines(2)
 
-                    volume = int(round(spotify_bus.Volume * 100))
+                    volume = int(round(spotify_bus.Volume * SystemConfig.VOLUM_BAR_MAX_VOLUME))
                     render_volume_bar(volume_bar, volume, shuffle_icon)
 
                     break_lines()
