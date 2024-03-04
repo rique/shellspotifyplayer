@@ -1,4 +1,5 @@
 import os
+import signal
 import subprocess
 import termios
 import tty
@@ -15,8 +16,9 @@ def setup_app():
         os.mkfifo(SystemConfig.FIFO_PATH)
     except FileExistsError:
         pass
-
-    subprocess.call("cava &>/dev/null &", shell=True)
+    
+    start_spotify()
+    start_cava()
 
     old_settings = termios.tcgetattr(sys.stdin)
     session_bus = SessionBus()
@@ -42,3 +44,13 @@ def setup_app():
     fifo_file =  open(SystemConfig.FIFO_PATH)
 
     return spotify_bus, playing_msg, playing_msg_len, reversed_timer, is_shuffle, shuffle_icon, previous_volue, fifo_file, old_settings
+
+
+def start_cava():
+    subprocess.run(f"/usr/bin/cava -p {SystemConfig.CAVA_CONFIG_PATH} &>/dev/null &", shell=True)
+
+def kill_cava():
+    subprocess.run("killall cava &>/dev/null", shell=True)
+
+def start_spotify():
+    subprocess.run("spotify &>/dev/null &", shell=True)

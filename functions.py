@@ -5,8 +5,10 @@ import json
 import os
 import random
 import wget
+from statistics import median, mean
+
 from datetime import datetime
-from math import floor
+from math import floor, ceil
 from hashlib import md5
 from os.path import exists as file_exists
 
@@ -82,7 +84,7 @@ def get_volume_color_and_label(volume, max_volume):
 
 
 def get_volume_bar(volume):
-    max_volume = SystemConfig.MAX_VOLUME
+    max_volume = SystemConfig.VOLUME_BAR_LENGTH
     volume = int(volume * max_volume)
     nb_spaces = max_volume - volume
     has_volume_glyph = '―' # █  ■ ⬛  ― █
@@ -127,9 +129,11 @@ def execute_action(c, spotify_bus, reversed_timer, volume, trk_pos, paused, mute
     elif c == '\x6e': # n
         spotify_bus.Next()
         playing = False
+        paused = False
     elif c == '\x70': # p
         spotify_bus.Previous()
         playing = False
+        paused = False
     elif c == '\x78': # x
         reversed_timer = not reversed_timer
     elif c == '\x2b': # +
@@ -174,7 +178,7 @@ def display_error_msg(error_msg, e=0, e_c=0):
 
     error_msg_len = len(error_msg)
 
-    if e < 140:
+    if e <= 228:
         error_msg_len = len(error_msg)
         print_error_msg(error_msg)
         e = e + 1
@@ -255,16 +259,6 @@ def get_marq_up(the_string_len):
 
 
 def pre_generate_marq(the_string, color):
-    """
-    abcdefghijklmnopqrstuvwxyz  
-    bcdefghijklmnopqrstuvwxyz   a
-    cdefghijklmnopqrstuvwxyz   ab
-    defghijklmnopqrstuvwxyz   abc
-    efghijklmnopqrstuvwxyz   abcd
-    fghijklmnopqrstuvwxyz   abcde
-    ghijklmnopqrstuvwxyz   abcdef
-    ...
-    """
     the_string = get_marq_string_padding(the_string)
     a_len = len(the_string)
     marq_array = []
@@ -445,31 +439,23 @@ def display_vu_meters(fifo_file):
         # k1_color = get_color_from_list(k)
         """l1_color = get_color_from_list(l)
         m_color = get_color_from_list(m1)"""
-        """print(f"[{bass3.zfill(3)}]  {f_color}{c * int(bass3)}{NC}{no_vol * (max_volume - int(bass3))}")
-        print(f"[{bass2.zfill(3)}]  {bass2_color}{c * int(bass2)}{NC}{no_vol * (max_volume - int(bass2))}")
-        print(f"[{r.zfill(3)}]  {r_color}{c * int(r)}{NC}{no_vol * (max_volume - int(r))}")
-        print(f"[{lmid.zfill(3)}]  {bass1_color}{c * int(lmid)}{NC}{no_vol * (max_volume - int(lmid))}")
-        print(f"[{b.zfill(3)}]  {b_color}{c * int(b)}{NC}{no_vol * (max_volume - int(b))}")
-        print(f"[{mid1.zfill(3)}]  {l_color}{c * int(mid1)}{NC}{no_vol * (max_volume - int(mid1))}")
-        print(f"[{mid2.zfill(3)}]  {a_color}{c * int(mid2)}{NC}{no_vol * (max_volume - int(mid2))}")
-        print(f"[{mid3.zfill(3)}]  {i_color}{c * int(mid3)}{NC}{no_vol * (max_volume - int(mid3))}")
-        print(f"[{g.zfill(3)}]  {g_color}{c * int(g)}{NC}{no_vol * (max_volume - int(g))}")
-        print(f"[{hmid1.zfill(3)}]  {k_color}{c * int(hmid1)}{NC}{no_vol * (max_volume - int(hmid1))}")
-        print(f"[{h.zfill(3)}]  {h_color}{c * int(h)}{NC}{no_vol * (max_volume - int(h))}")
-        print(f"[{j.zfill(3)}]  {j_color}{c * int(j)}{NC}{no_vol * (max_volume - int(j))}")"""
+        
         # █
         print(f"[{f_color}█{NC}]  {f_color}{c * int(bass3)}{NC}{no_vol * (max_volume - int(bass3))}")
         print(f"[{bass2_color}█{NC}]  {bass2_color}{c * int(bass2)}{NC}{no_vol * (max_volume - int(bass2))}")
+        
         print(f"[{g_color}█{NC}]  {g_color}{c * int(g)}{NC}{no_vol * (max_volume - int(g))}")
         print(f"[{bass1_color}█{NC}]  {bass1_color}{c * int(lmid)}{NC}{no_vol * (max_volume - int(lmid))}")
-        
+
         print(f"[{h_color}█{NC}]  {h_color}{c * int(h)}{NC}{no_vol * (max_volume - int(h))}")
         print(f"[{b_color}█{NC}]  {b_color}{c * int(b)}{NC}{no_vol * (max_volume - int(b))}")
+
         print(f"[{a_color}█{NC}]  {a_color}{c * int(mid2)}{NC}{no_vol * (max_volume - int(mid2))}")
         print(f"[{i_color}█{NC}]  {i_color}{c * int(mid3)}{NC}{no_vol * (max_volume - int(mid3))}")
         
         print(f"[{l_color}█{NC}]  {l_color}{c * int(mid1)}{NC}{no_vol * (max_volume - int(mid1))}")
         print(f"[{k_color}█{NC}]  {k_color}{c * int(hmid1)}{NC}{no_vol * (max_volume - int(hmid1))}")
+        
         print(f"[{r_color}█{NC}]  {r_color}{c * int(r)}{NC}{no_vol * (max_volume - int(r))}")
         print(f"[{j_color}█{NC}]  {j_color}{c * int(j)}{NC}{no_vol * (max_volume - int(j))}")
         
@@ -477,6 +463,10 @@ def display_vu_meters(fifo_file):
         
         """print(f"[{l1_color}█{NC}]  {l1_color}{c * int(l)}{NC}{no_vol * (max_volume - int(l))}")
         print(f"[{m_color}█{NC}]  {m_color}{c * int(m1)}{NC}{no_vol * (max_volume - int(m1))}")"""
+
+        # return mean([int(l) for l in line])
+        # return int(bass3)
+
     except ValueError as e:
         display_empty_vu_metters(msg=f"EXCEPT {e}")
     except Exception as e:
@@ -501,9 +491,9 @@ def display_empty_vu_metters(msg="NO DATA", fatal=False):
     print(f"[000]  {AMARILLO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
     print(f"[000]  {AMARILLO}{char * 48} {NC}__________________{AMARILLO} {char * 47}{NC}")
     print(f"[000]  {AZUL}{char * 48} {NC}|                |{AZUL} {char * 47}{NC}")
-    print(f"[000]  {AZUL}{char * 48} {NC}|{spacing * padding_l}{msg}{spacing * padding_r}|{AZUL} {char * 40}{NC}")
+    print(f"[000]  {AZUL}{char * 48} {NC}|{spacing * padding_l}{msg}{spacing * padding_r}|{AZUL} {char * 47}{NC}")
     print(f"[000]  {AZUL}{char * 48} {NC}|                |{AZUL} {char * 47}{NC}")
-    print(f"[000]  {AZUL}{char * 48} {NC}‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾{AZUL} {char * 47}{NC}")
+    print(f"[000]  {AZUL}{char * 48} {NC}──────────────────{AZUL} {char * 47}{NC}")
     print(f"[000]  {ROJO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
     print(f"[000]  {ROJO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
     print(f"[000]  {ROJO}{char * LayoutConfig.COLUMN_COUNT}{NC}")
@@ -533,6 +523,40 @@ def display_empty_vu_metters_ve(msg=''):
 
 
 
+def print_graph(values, max_cols):
+    nb_graphs = GraphLevelsConfig.NB_GRAPHS
+    max_val = SystemConfig.MAX_VOLUME
+    values_graph = []
+    incr = len(values) < max_cols
+
+    NC = '\033[0m'
+
+    for val in values:
+        if not val:
+            val = 0
+        values_graph.append(get_graph_value(val, max_val, nb_graphs))
+
+    graphs = [[] for i in range(nb_graphs)]
+
+    for val_graph in values_graph:
+        for i in range(nb_graphs):
+            val_color = get_color_from_list(val_graph, max_volume=nb_graphs, is_bold=True)
+            if not incr:
+                graphs[i] = graphs[i][0: (max_cols - 1)]
+            if val_graph == i:
+                graphs[i].insert(0, f'{val_color}.{NC}') # ─
+
+            else:
+                graphs[i].insert(0, f'{NC} {NC}')
+    graphs = graphs[::-1]
+    for graph in graphs:
+        print(''.join(graph))
+
+
+def get_graph_value(val ,max_val ,nb_graphs):
+    return int((val / max_val) * nb_graphs)
+
+
 def get_random_color():
     i = random.randint(17, 231)
 
@@ -550,16 +574,16 @@ def get_symetric_color(val):
     return f"\033[38;5;{val + 17}m{BOLD}"
 
 
-def get_color_from_list(vol, max_volume=SystemConfig.MAX_VOLUME):
+def get_color_from_list(vol, max_volume=SystemConfig.MAX_VOLUME, is_bold=False):
 
     vol = int(vol)
     
     if vol == 0:
         return '\033[38;5;185m'
     
+    bold = GraphLevelsConfig.GRAPH_BOLD if is_bold else ''
     list_color = GraphLevelsConfig.LIST_COLORS_VOLUME
     list_color_len = len(list_color)
-    bold = GraphLevelsConfig.GRAPH_BOLD
 
     if vol == 1:
         return f'\033[38;5;{list_color[0]}m{bold}'
@@ -625,21 +649,11 @@ def get_image_sixel(album_art_id):
 
 
 def render_album_art(t, sxl_path=None):
-    # stdscr = start_curses(3, 3)
-    """curses.start_color()
-    curses.use_default_colors()
-    stdscr.clear()
-    stdscr.refresh()
-    """# t = 279000
     if not sxl_path:
         sxl_path = SystemConfig.GENERIC_ALBUM_ART_PATH
-    i = 0
-    
+   
     res = subprocess.run(f"cat {sxl_path}", stdout=subprocess.PIPE, shell=True)
     print(res.stdout.decode())
-    # stdscr.refresh()
-    # curses.napms(int(t))
-    # end_curses(stdscr)
     
 
 def get_album_art_data(sxl_path):

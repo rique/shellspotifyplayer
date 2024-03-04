@@ -23,19 +23,23 @@ from functions import (
                     do_marq_array,
                     display_tracks_info,
                     display_vu_meters,
-                    render_volume_bar
+                    render_volume_bar,
+                    print_graph
             )
 from config import MarqueeConfig, AliveBarConfig, SystemConfig
 
 from alive_progress import alive_bar
 from time import sleep
-from app_functions import setup_app
+from app_functions import setup_app, start_cava, kill_cava
 
 from colors import TITLE_GREY, NC, SHUFFLE_OFF, SHUFFLE_ON
 
 
 def main():
     spotify_bus, playing_msg, playing_msg_len, reversed_timer, is_shuffle, shuffle_icon, previous_volue, fifo_file, old_settings = setup_app()
+    volume_values = []
+    sleeptime = SystemConfig.SLEEP
+    paused = spotify_bus.PlaybackStatus == 'Paused'
     while True:
         try:
             subprocess.run('clear', shell=True)
@@ -72,6 +76,11 @@ def main():
             marq_c = MarqueeConfig.MARQ_C # Marquee effect actif
             marq_l = MarqueeConfig.MARQ_L
             marq_up = get_marq_up(track_info_len)
+            
+            max_cols = SystemConfig.MAX_COLS
+            array_key_up = 1
+            array_key_down = 0
+            graph_counter = 0
 
             current_volume = spotify_bus.Volume
 
@@ -81,7 +90,7 @@ def main():
             # weather = open('/home/enriaue/.stuff/tempe_sp').readline()
             playing = True
             show_now_playing = True
-            paused = spotify_bus.PlaybackStatus == 'Paused'
+            
             muted = current_volume == 0
 
             error_msg = ''
@@ -101,11 +110,11 @@ def main():
                     trk_pos = spotify_bus.Position
                     cur_track_id = spotify_bus.Metadata['mpris:trackid']
                     try:
-                        percent_pos = int((trk_pos / track_length) * 1000)
+                        percent_pos = (trk_pos / track_length) * 1000
                     except ZeroDivisionError:
                         playing = False
                         continue
-
+                    
                     if percent_pos == 0:
                         playing = False
                         continue
@@ -118,36 +127,42 @@ def main():
                         playing, reversed_timer, volume_changed, previous_volue, error_msg, paused, muted, is_shuffle = execute_action(sys.stdin.read(1), spotify_bus, reversed_timer, previous_volue, trk_pos, paused, muted, is_shuffle, track_id)
                         if volume_changed:
                             volume_bar = get_volume_bar(spotify_bus.Volume)
-                        if not playing:
-                            continue
+                        
+                        if paused:
+                            sleeptime = SystemConfig.PAUSE_SLEEP
+                        else:
+                            sleeptime = SystemConfig.SLEEP
                         if paused and not muted:
+                            kill_cava()
                             if fifo_file:
                                 fifo_file.close()
                                 fifo_file = None
+                                
                         elif not muted:
                             if not fifo_file:
+                                start_cava()
                                 fifo_file = open(SystemConfig.FIFO_PATH)
                         if muted and not paused:
+                            kill_cava()
                             if fifo_file:
                                 fifo_file.close()
                                 fifo_file = None
+                                
                         elif not paused:
                             if not fifo_file:
+                                start_cava()
                                 fifo_file = open(SystemConfig.FIFO_PATH)
                         shuffle_icon = f' {SHUFFLE_ON}{NC}' if is_shuffle else f' {SHUFFLE_OFF}{NC}'
-
+                        if not playing:
+                            continue
                     progr = percent_pos / 1000
-
-                    if  progr > 1:
-                        playing = False
-                        progr = 1
 
                     timers = get_progress_time(trk_pos, track_length, reversed_timer=reversed_timer)
                     
                     bar.title(f"{timers['min']:02}:{timers['sec']:02}")
                     bar(progr)
 
-                    sleep(SystemConfig.SLEEP)
+                    sleep(sleeptime)
 
                     if cur_track_id != track_id:
                         playing = False
@@ -184,8 +199,18 @@ def main():
                     # print(f"{album_art_data}{NC}")
                     break_lines(2)
                     display_vu_meters(fifo_file)
-                    break_lines(2)
+                    # volume_values.append(vol_val)
 
+                    
+
+                    # break_lines(2)
+                    # print_graph(volume_values, SystemConfig.MAX_COLS)
+                    
+                    """if array_key_up >= max_cols:
+                        volume_values.pop(0)
+
+                    array_key_up += 1"""
+                    break_lines(2)
                     volume = int(round(spotify_bus.Volume * SystemConfig.VOLUM_BAR_MAX_VOLUME))
                     render_volume_bar(volume_bar, volume, shuffle_icon)
 

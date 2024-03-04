@@ -2,7 +2,7 @@ from colors import NC, BOLD
 class MarqueeConfig:
     MARQ_X = 0 # Marquee effect key
     MARQ_C = 0 # Marquee effect actif
-    MARQ_L = 2380
+    MARQ_L = 2600
     SPEED = 1/3
     ROUNDS = 1
 
@@ -17,14 +17,18 @@ class AliveBarConfig:
 
 
 class SystemConfig:
-    CONFIG_STORAGE_PATH = "~/.config/sp_player/"
+    CONFIG_STORAGE_PATH = "/home/enriaue/.config/sp_player/"
     SLEEP = .008
+    PAUSE_SLEEP = .16
+    CAVA_CONFIG_PATH = '/home/enriaue/.config/cava/config.spp'
     FIFO_PATH = '/tmp/cava'
     MAX_VOLUME = 115
+    VOLUME_BAR_LENGTH = 50
     VOLUM_BAR_MAX_VOLUME = 100
     BASE_PATH = '/home/enriaue/.local/lib/show_date/spotify_player/'
     ALBUM_ART_PATH = '/home/enriaue/.local/lib/show_date/spotify_player/albumarts/'
     GENERIC_ALBUM_ART_PATH = '/home/enriaue/.local/lib/show_date/spotify_player/albumarts/generic.sxl'
+    MAX_COLS = 115
 
 
 class GraphLevelsConfig:
@@ -35,7 +39,8 @@ class GraphLevelsConfig:
     GRAPH_SMALL_GLYPH = '▌' # ▏▎▍▌▋▊▉█
     GRAPH_DOT = '.'
     GRAPH_LINE = '―'
-    GRAPH_BOLD = ''
+    GRAPH_BOLD = BOLD
+    NB_GRAPHS = 20
 
 
 
